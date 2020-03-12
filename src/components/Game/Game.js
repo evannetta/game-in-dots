@@ -5,19 +5,34 @@ import Board from '../Board/Board'
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    
-    this.fields = 25;
-    this.delay = 1000;
     this.previous = 0;
-    this.free = [...Array(25).keys()];
-    this.intervalId = null;
+    this.free = [];
+    this.gameStarted = null;
     this.points = { player: 0, computer: 0};
+    this.captionPlay = 'Play';
+    this.isPlayDisabled = true;
+    this.presets = {};
+    this.settings= {};
     this.state = {
       squares: Array(25).fill('white'),
       winner: {name: '', date: ''},
-     };
+    };
+    this.onPlayClick = this.onPlayClick.bind(this);
+    this.onInputSettings = this.onInputSettings.bind(this);
   }
-  
+  componentDidMount(){
+    fetch("https://starnavi-frontend-test-task.herokuapp.com/game-settings")
+    .then(res => res.json())
+    .then(
+      (result) => {
+        this.presets = result;
+      },
+      (error) => {
+        this.presets = {easyMode: {field: 5*5, delay: 2000}};
+      }
+    )
+  }
+
   onSquareClick(index) {
     const squares = [...this.state.squares];
     if(squares[index] === 'lightblue'){
@@ -27,14 +42,16 @@ class Game extends React.Component {
       this.checkWinner();
     }
   }
-
+  
   nextMove(){
     const squares = [...this.state.squares];
     if(squares[this.previous] === 'lightblue'){
-        squares[this.previous] = 'lightcoral';
+      squares[this.previous] = 'lightcoral';
         this.points.computer += 1;
         this.setState({squares});
-        if(this.checkWinner()) return;
+        if(this.checkWinner()) {
+          return;
+        }
     }
     const rand = Math.floor(Math.random() * Math.floor(this.free.length));
     this.previous = this.free[rand];
@@ -46,47 +63,102 @@ class Game extends React.Component {
   checkWinner(){
     const {player, computer} = this.points;
     let winner;
-    if(player > this.fields*50/100 ){
-      winner = {name: 'vasia', date: new Date().toUTCString()};
-    } else if(computer > this.fields*50/100 ){
-      winner = {name: 'computer', date: new Date().toUTCString()};
-    } else return false;
+    if(player > this.settings.field*50/100 ){
+      winner = {name: this.settings.playerName, date: new Date().toUTCString()};
+    } else if(computer > this.settings.field*50/100 ){
+        const name = 'computer';
+        winner = {name , date: new Date().toUTCString()};
+      } else {
+        return;
+      }
     this.setState({winner});
-    clearInterval(this.intervalId);
+    this.stopGame();
     return true;
   }
 
-  onPlayClick(){
+  stopGame(){
+    clearInterval(this.gameStarted);
+    this.gameStarted = null;
+    this.initNewGame();
+  }
+
+  initNewGame(){
+    this.previous = 0;
+    this.points = { player: 0, computer: 0};
+    const mode = this.settings.mode;
+    this.settings.field = this.presets[mode].field**2;
+    this.free = [...Array(this.settings.field).keys()];
+    this.settings.delay = this.presets[mode].delay;
+    console.log("initgame");
+    this.setState({squares: Array(this.settings.field).fill('white')});
+  }
+
+  onPlayClick(event){
+    event.preventDefault();
+    if(this.gameStarted){
+      this.stopGame();
+    }
+    if(this.captionPlay === 'Play'){
+      this.captionPlay = 'Play again';
+    }
+    this.setState({winner: {name: '', date: ''}});
     this.nextMove();
-    this.intervalId = setInterval(() => {
+    this.gameStarted = setInterval(() => {
        this.nextMove();
-    }, this.delay);
+    }, this.settings.delay);
   }
+
   message(){
-    const winner = this.state.winner;
-    if(winner.name === 'computer'){
-        return <p className = 'message'>Computer won</p>;
-      } else if(winner.name === ''){
-        return <p className = 'message'></p>;
-      } else {
-        return <p className = 'message'>{`Player ${winner.name} won`}</p>;
-      }
+    if(this.state.winner.name === 'computer'){
+         return 'Computer won';
+       } else {
+         return `Player ${this.state.winner.name || 'anonymous'} won`;
+       }
   }
+ 
+  onInputSettings (event) {
+    if(event.target.name === 'name'){
+      this.settings.playerName = event.target.value;
+    }
+    if(event.target.name === 'mode'){
+      this.settings.mode = event.target.value;
+      if(this.gameStarted){
+        this.stopGame();
+      } else {
+        this.initNewGame();
+      }
+      this.isPlayDisabled = false;
+    }
+  }
+
   render () {
     return (
     <div className="Game">
       <header className="Game-header">
         <h1>Game In Dots</h1>
       </header>
-      <button onClick = {() => this.onPlayClick()}>Play</button>
-      {this.message()}
-      <Board
-            squares={this.state.squares}
-            onClick={(i) => this.onSquareClick(i)}
-      />
+      <form onSubmit={this.onPlayClick}>
+          <select name = 'mode' defaultValue='Pick game mode' onChange={this.onInputSettings}>
+            <option hidden>Pick game mode</option>
+            <option value='easyMode'>Easy</option>
+            <option value='normalMode'>Normal</option>
+            <option value='hardMode'>Hard</option>
+          </select>
+          <input name = 'name' type="text" placeholder='Enter your name' onChange = {this.onInputSettings}/>
+          <input id = 'play-button' type="submit" disabled={this.isPlayDisabled}  value={this.captionPlay}/>
+      </form>
+      <p className = 'message'>
+      {this.state.winner.name!=='' ? this.message(): ''}
+      </p>
+      <div className="game-board">
+        <Board 
+              squares={this.state.squares}
+              onClick={(i) => this.onSquareClick(i)}
+        />
+      </div>
     </div>
     );
   }
 }
-
+ 
 export default Game;
