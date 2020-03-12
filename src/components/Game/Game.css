@@ -1,4 +1,50 @@
 .Game {
   text-align: center;
+  width: 800px;
+  margin: 7% auto;
+  font-family: 'Baloo Chettan 2', cursive;
+  font-weight: bold;
 }
-
+.game-wrapper{
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+.game-settings{
+  margin: 20px 10px;
+  display: flex;
+  justify-content: space-between;
+}
+#mode-select{
+  width: 130px;
+  height: 40px;
+  background-color: gainsboro;
+  color: slategray;
+  font-weight: bold;
+}
+#mode-select option {
+  background: white;
+}
+#name-input{
+  width: 130px;
+  height: 34px;
+  text-align: center;
+  font-weight: bold;
+}
+#play-button{
+  width: 100px;
+  height: 40px;
+  border-radius: 5px;
+  background-color: slategray;
+  color: white;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+#play-button:disabled{
+  opacity: 0.65; 
+  cursor: not-allowed;
+}
+.message{
+  font-size: 20px;
+  font-weight: bold;
+  color: slategray;
+}

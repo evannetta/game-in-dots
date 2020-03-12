@@ -1,6 +1,7 @@
 import React from 'react';
 import './Game.css';
-import Board from '../Board/Board'
+import Board from '../Board/Board';
+import LeaderBoard from '../LeaderBoard/LeaderBoard';
 
 class Game extends React.Component {
   constructor(props) {
@@ -11,28 +12,68 @@ class Game extends React.Component {
     this.points = { player: 0, computer: 0};
     this.captionPlay = 'Play';
     this.presets = {};
-    this.settings= {};
+    this.settings= {
+      delay: 0,
+      mode: 0,
+      field: 0,
+      playerName: ''
+    };
     this.state = {
       isPlayDisabled : true,
       squares: Array(25).fill('white'),
       winner: {name: '', date: ''},
+      winners: [],
     };
     this.onPlayClick = this.onPlayClick.bind(this);
     this.onInputSettings = this.onInputSettings.bind(this);
   }
 
   componentDidMount(){
-    fetch("https://starnavi-frontend-test-task.herokuapp.com/game-settings")
+    this.getSettingsFromServer();
+    this.getWinnersFromServer();
+    
+  }
+
+  getWinnersFromServer(){
+    fetch("https://starnavi-frontend-test-task.herokuapp.com/winners")
     .then(res => res.json())
     .then(
       (result) => {
-        this.presets = result;
+        this.setState({winners: result});
       },
       (error) => {
-        this.presets = {easyMode: {field: 5*5, delay: 2000}};
+        this.setState({winners: []});
       }
-    )
+    );
   }
+
+  getSettingsFromServer()
+  {
+    fetch("https://starnavi-frontend-test-task.herokuapp.com/game-settings")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.presets = result;
+        },
+        (error) => {
+          this.presets = {easyMode: {field: 5*5, delay: 2000}};
+        }
+      );
+  }
+  
+  // sendResultsToServer() {
+  //   fetch('https://starnavi-frontend-test-task.herokuapp.com/winners', {  
+  //   method: 'POST',
+  //   headers: {
+  //     'Accept': 'application/json',
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     firstParam: 'yourValue',
+  //     secondParam: 'yourOtherValue',
+  //   })
+  // })
+  // }
 
   onSquareClick(index) {
     const squares = [...this.state.squares];
@@ -133,28 +174,40 @@ class Game extends React.Component {
 
   render () {
     return (
-    <div className="Game">
-      <header className="Game-header">
-        <h1>Game In Dots</h1>
-      </header>
-      <form onSubmit={this.onPlayClick}>
-          <select name = 'mode' defaultValue='Pick game mode' onChange={this.onInputSettings}>
-            <option hidden>Pick game mode</option>
-            <option value='easyMode'>Easy</option>
-            <option value='normalMode'>Normal</option>
-            <option value='hardMode'>Hard</option>
-          </select>
-          <input name = 'name' type="text" placeholder='Enter your name' onChange = {this.onInputSettings}/>
-          <input id = 'play-button' type="submit" disabled={this.state.isPlayDisabled}  value={this.captionPlay}/>
-      </form>
-      <p className = 'message'>
-      {this.state.winner.name!=='' ? this.message(): ''}
-      </p>
-      <div className="game-board">
-        <Board 
-              squares={this.state.squares}
-              onClick={(i) => this.onSquareClick(i)}
-        />
+    <div className = 'Game'>
+      <h1>Game In Dots</h1>
+      <div className = 'game-wrapper'> 
+        <div className = 'game-board'>
+          <form className = 'game-settings' onSubmit = {this.onPlayClick}>
+              <select id = 'mode-select'
+              name = 'mode' defaultValue = 'Pick game mode' onChange = {this.onInputSettings}>
+                <option hidden>Pick game mode</option>
+                <option value = 'easyMode' >Easy</option>
+                <option value = 'normalMode' >Normal</option>
+                <option value = 'hardMode' >Hard</option>
+              </select>
+              <input id = 'name-input'
+                name = 'name'
+                type = 'text'
+                placeholder = 'Enter your name'
+                onChange = {this.onInputSettings}/>
+              <input id = 'play-button'
+                type = 'submit'
+                disabled = {this.state.isPlayDisabled}
+                value = {this.captionPlay}/>
+          </form>
+          <p className = 'message' style = {{visibility: this.state.winner.name === '' ? 'hidden' : 'visible'}}>
+            {this.message()}
+          </p>
+          <Board squares = {this.state.squares}
+                 onClick = {(i) => this.onSquareClick(i)}
+                 field = {this.settings.field}
+          />
+        </div>
+        <div className = 'leader-board' >
+          <h2>Leader board</h2>
+          <LeaderBoard winners = {this.state.winners} />
+        </div>
       </div>
     </div>
     );

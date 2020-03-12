@@ -1,0 +1,14 @@
+.winner{
+    width: 270px;
+    border: 1px solid gainsboro;
+    background-color: gainsboro;
+    text-align: left;
+    margin: 5px auto 0;
+    display: flex;
+    justify-content: space-between;
+}
+.winner p{
+    padding: 0 10px;
+    text-transform: capitalize;
+    color: slategray;
+}
