@@ -10,16 +10,17 @@ class Game extends React.Component {
     this.gameStarted = null;
     this.points = { player: 0, computer: 0};
     this.captionPlay = 'Play';
-    this.isPlayDisabled = true;
     this.presets = {};
     this.settings= {};
     this.state = {
+      isPlayDisabled : true,
       squares: Array(25).fill('white'),
       winner: {name: '', date: ''},
     };
     this.onPlayClick = this.onPlayClick.bind(this);
     this.onInputSettings = this.onInputSettings.bind(this);
   }
+
   componentDidMount(){
     fetch("https://starnavi-frontend-test-task.herokuapp.com/game-settings")
     .then(res => res.json())
@@ -49,7 +50,8 @@ class Game extends React.Component {
       squares[this.previous] = 'lightcoral';
         this.points.computer += 1;
         this.setState({squares});
-        if(this.checkWinner()) {
+        this.checkWinner();
+        if(!this.gameStarted) {
           return;
         }
     }
@@ -66,20 +68,24 @@ class Game extends React.Component {
     if(player > this.settings.field*50/100 ){
       winner = {name: this.settings.playerName, date: new Date().toUTCString()};
     } else if(computer > this.settings.field*50/100 ){
-        const name = 'computer';
-        winner = {name , date: new Date().toUTCString()};
+        winner = {name: 'computer', date: new Date().toUTCString()};
       } else {
         return;
-      }
+    }
     this.setState({winner});
     this.stopGame();
-    return true;
   }
 
   stopGame(){
     clearInterval(this.gameStarted);
     this.gameStarted = null;
-    this.initNewGame();
+  }
+
+  startGame(){
+    this.nextMove();
+    this.gameStarted = setInterval(() => {
+       this.nextMove();
+    }, this.settings.delay);
   }
 
   initNewGame(){
@@ -89,8 +95,8 @@ class Game extends React.Component {
     this.settings.field = this.presets[mode].field**2;
     this.free = [...Array(this.settings.field).keys()];
     this.settings.delay = this.presets[mode].delay;
-    console.log("initgame");
-    this.setState({squares: Array(this.settings.field).fill('white')});
+    this.setState({squares: Array(this.settings.field).fill('white'), winner: {name: '', date: ''}},
+     () => this.startGame());
   }
 
   onPlayClick(event){
@@ -101,19 +107,15 @@ class Game extends React.Component {
     if(this.captionPlay === 'Play'){
       this.captionPlay = 'Play again';
     }
-    this.setState({winner: {name: '', date: ''}});
-    this.nextMove();
-    this.gameStarted = setInterval(() => {
-       this.nextMove();
-    }, this.settings.delay);
+    this.initNewGame();
   }
 
   message(){
     if(this.state.winner.name === 'computer'){
-         return 'Computer won';
-       } else {
-         return `Player ${this.state.winner.name || 'anonymous'} won`;
-       }
+      return 'Computer won';
+    } else {
+      return `Player ${this.state.winner.name || 'anonymous'} won`;
+    }
   }
  
   onInputSettings (event) {
@@ -124,10 +126,8 @@ class Game extends React.Component {
       this.settings.mode = event.target.value;
       if(this.gameStarted){
         this.stopGame();
-      } else {
-        this.initNewGame();
       }
-      this.isPlayDisabled = false;
+      this.setState({isPlayDisabled : false});
     }
   }
 
@@ -145,7 +145,7 @@ class Game extends React.Component {
             <option value='hardMode'>Hard</option>
           </select>
           <input name = 'name' type="text" placeholder='Enter your name' onChange = {this.onInputSettings}/>
-          <input id = 'play-button' type="submit" disabled={this.isPlayDisabled}  value={this.captionPlay}/>
+          <input id = 'play-button' type="submit" disabled={this.state.isPlayDisabled}  value={this.captionPlay}/>
       </form>
       <p className = 'message'>
       {this.state.winner.name!=='' ? this.message(): ''}

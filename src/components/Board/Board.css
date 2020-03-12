@@ -1,10 +1,29 @@
 .game-board{
 margin: 0 auto;
 width: 250px;
-display: grid;
 grid-template-columns: repeat(5, 1fr);
-grid-template-rows: repeat(5, 1fr);
 border: 1px solid gainsboro;
+}
+.normalMode{
+margin: 0 auto;
+width: 250px;
+display: grid;
+grid-template-columns: repeat(10, 1fr);
+border: 1px solid gainsboro;
+}
+.easyMode{
+    margin: 0 auto;
+    width: 250px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border: 1px solid gainsboro;
+}
+.hardMode{
+    margin: 0 auto;
+    width: 250px;
+    display: grid;
+    grid-template-columns: repeat(25, 1fr);
+    border: 1px solid gainsboro;
 }
 .square{
 width: 50px;
