@@ -31,11 +31,10 @@ class Game extends React.Component {
   componentDidMount(){
     this.getSettingsFromServer();
     this.getWinnersFromServer();
-    
   }
 
   getWinnersFromServer(){
-    fetch("https://starnavi-frontend-test-task.herokuapp.com/winners")
+    fetch('https://starnavi-frontend-test-task.herokuapp.com/winners')
     .then(res => res.json())
     .then(
       (result) => {
@@ -49,7 +48,7 @@ class Game extends React.Component {
 
   getSettingsFromServer()
   {
-    fetch("https://starnavi-frontend-test-task.herokuapp.com/game-settings")
+    fetch('https://starnavi-frontend-test-task.herokuapp.com/game-settings')
       .then(res => res.json())
       .then(
         (result) => {
@@ -61,19 +60,20 @@ class Game extends React.Component {
       );
   }
   
-  // sendResultsToServer() {
-  //   fetch('https://starnavi-frontend-test-task.herokuapp.com/winners', {  
-  //   method: 'POST',
-  //   headers: {
-  //     'Accept': 'application/json',
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({
-  //     firstParam: 'yourValue',
-  //     secondParam: 'yourOtherValue',
-  //   })
-  // })
-  // }
+  sendResultsToServer() {
+    fetch('https://starnavi-frontend-test-task.herokuapp.com/winners', {  
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      winner: this.state.winner.name,
+      date: this.state.winner.date,
+    })})
+    .then(response => response.json())
+  .then(json => console.log(json))
+  }
 
   onSquareClick(index) {
     const squares = [...this.state.squares];
@@ -106,14 +106,26 @@ class Game extends React.Component {
   checkWinner(){
     const {player, computer} = this.points;
     let winner;
-    if(player > this.settings.field*50/100 ){
-      winner = {name: this.settings.playerName, date: new Date().toUTCString()};
-    } else if(computer > this.settings.field*50/100 ){
-        winner = {name: 'computer', date: new Date().toUTCString()};
+    const time = new Date().toLocaleTimeString('en-US', 
+    {hour: '2-digit', minute: '2-digit', hour12: false});
+    const date = new Date();
+    const formatedDate =
+     `${time}; ${date.getDate()} ${date.toLocaleDateString('en-US',
+     {month: 'long', year: 'numeric'})}`;
+    if(player > this.settings.field * 50 / 100 ){
+      winner = {
+        name: this.settings.playerName,
+        date: formatedDate
+      };
+    } else if(computer > this.settings.field * 50 / 100 ){
+        winner = {
+          name: 'computer',
+          date: formatedDate
+        };
       } else {
         return;
     }
-    this.setState({winner});
+    this.setState({winner}, () => this.sendResultsToServer());
     this.stopGame();
   }
 
@@ -136,8 +148,9 @@ class Game extends React.Component {
     this.settings.field = this.presets[mode].field**2;
     this.free = [...Array(this.settings.field).keys()];
     this.settings.delay = this.presets[mode].delay;
-    this.setState({squares: Array(this.settings.field).fill('white'), winner: {name: '', date: ''}},
-     () => this.startGame());
+    this.setState(
+      {squares: Array(this.settings.field).fill('white'), winner: {name: '', date: ''}},
+      () => this.startGame());
   }
 
   onPlayClick(event){
@@ -180,7 +193,9 @@ class Game extends React.Component {
         <div className = 'game-board'>
           <form className = 'game-settings' onSubmit = {this.onPlayClick}>
               <select id = 'mode-select'
-              name = 'mode' defaultValue = 'Pick game mode' onChange = {this.onInputSettings}>
+                name = 'mode'
+                defaultValue = 'Pick game mode'
+                onChange = {this.onInputSettings}>
                 <option hidden>Pick game mode</option>
                 <option value = 'easyMode' >Easy</option>
                 <option value = 'normalMode' >Normal</option>
@@ -196,7 +211,8 @@ class Game extends React.Component {
                 disabled = {this.state.isPlayDisabled}
                 value = {this.captionPlay}/>
           </form>
-          <p className = 'message' style = {{visibility: this.state.winner.name === '' ? 'hidden' : 'visible'}}>
+          <p className = 'message' 
+             style = {{visibility: this.state.winner.name === '' ? 'hidden' : 'visible'}}>
             {this.message()}
           </p>
           <Board squares = {this.state.squares}
