@@ -48,7 +48,7 @@ class Game extends React.Component {
 
   getSettingsFromServer()
   {
-    fetch('https://starnavi-frontend-test-task.herokuapp.com/game-settings')
+    fetch('https://my-json-server.typicode.com/evannetta/my-server')
       .then(res => res.json())
       .then(
         (result) => {
