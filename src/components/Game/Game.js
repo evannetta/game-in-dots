@@ -61,7 +61,7 @@ class Game extends React.Component {
   }
   
   sendResultsToServer() {
-    fetch('https://starnavi-frontend-test-task.herokuapp.com/winners', {  
+    fetch('https://jsonplaceholder.typicode.com/posts', {  
     method: 'POST',
     headers: {
       'Accept': 'application/json',
