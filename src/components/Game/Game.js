@@ -48,7 +48,7 @@ class Game extends React.Component {
 
   getSettingsFromServer()
   {
-    fetch('https://my-json-server.typicode.com/evannetta/my-server', {mode: 'no-cors'})
+    fetch('https://my-json-server.typicode.com/evannetta/my-server', {method: 'GET', mode: 'no-cors'})
       .then(res => res.json())
       .then(
         (result) => {
